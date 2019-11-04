@@ -5,3 +5,4 @@ size = 1
 fps = 20
 cmap = 'hot'
 iso = False
+time = None
