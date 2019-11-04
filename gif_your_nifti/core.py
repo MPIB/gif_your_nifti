@@ -33,7 +33,7 @@ def parse_filename(filepath):
     return dirname, basename, ext
 
 
-def load_and_prepare_image(filename, size=1):
+def load_and_prepare_image(filename, size=1, time=None):
     """Load and prepare image data.
 
     Parameters
@@ -42,6 +42,8 @@ def load_and_prepare_image(filename, size=1):
         Input file (eg. /john/home/image.nii.gz)
     size: float
         Image resizing factor.
+    time: str
+        Plane to pick for 4D-mode.
 
     Returns
     -------
@@ -49,8 +51,18 @@ def load_and_prepare_image(filename, size=1):
 
     """
     # Load NIfTI file
-    data = nb.load(filename).get_data()
+    image = nb.load(filename)
 
+    # no need to make volumes things isometric
+    if time is not None:
+        out_img = image.get_data()
+        x, y, z, t = out_img.shape
+        out_img = out_img/out_img.max() # implicit conversion
+        if size != 1:
+            out_img = resize(out_img, list(np.array([x,y,z]) * size) + [t])
+        return out_img, z
+
+    data = image.get_data()
     # Pad data array with zeros to make the shape isometric
     maximum = np.max(data.shape)
 
@@ -74,26 +86,67 @@ def load_and_prepare_image(filename, size=1):
     return out_img, maximum
 
 
-def create_mosaic_normal(out_img, maximum):
+def create_mosaic_normal(out_img, maximum, time):
     """Create grayscale image.
 
     Parameters
     ----------
     out_img: numpy array
     maximum: int
+    time: string
+        Slice plane to use for 4D (time) mode (coronal, saggital, horizontal)
+        Default: None
 
     Returns
     -------
     new_img: numpy array
 
     """
-    new_img = np.array(
-        [np.hstack((
-            np.hstack((
-                np.flip(out_img[i, :, :], 1).T,
-                np.flip(out_img[:, maximum - i - 1, :], 1).T)),
-            np.flip(out_img[:, :, maximum - i - 1], 1).T))
-         for i in range(maximum)])
+    # one gif per volume
+    if time is not None:
+        # calculate grid size
+        x, y, z, t = out_img.shape
+        cols = 10
+        rows = int(np.ceil(t/cols)) 
+        # pad missing volumes with zeros
+        out_img = np.append(out_img, np.zeros((x, y, z, rows * cols - t)), axis=3)
+
+        if time == 'sagittal':
+            new_img = np.array([
+                np.vstack([
+                    np.hstack([
+                        np.flip(out_img[x - 1 - d, :, :, col + row * rows], 1).T
+                        for col in range(cols)
+                    ]) for row in range(rows)
+                ]) for d in range(x)
+            ])
+        elif time == 'coronal':
+            new_img = np.array([
+                np.vstack([
+                    np.hstack([
+                        np.flip(out_img[:, y - 1 - d, :, col + row * rows], 1).T
+                        for col in range(cols)
+                    ]) for row in range(rows)
+                ]) for d in range(y)
+            ])
+        else:
+            new_img = np.array([
+                np.vstack([
+                    np.hstack([
+                        np.flip(out_img[:, :, d, col + row * rows], 1).T
+                        for col in range(cols)
+                    ]) for row in range(rows)
+                ]) for d in range(z)
+            ])
+    # 3x1 gif for each plane
+    else:
+        new_img = np.array(
+            [np.hstack((
+                np.hstack((
+                    np.flip(out_img[i, :, :], 1).T,
+                    np.flip(out_img[:, maximum - i - 1, :], 1).T)),
+                np.flip(out_img[:, :, maximum - i - 1], 1).T))
+            for i in range(maximum)])
 
     return new_img
 
@@ -166,7 +219,7 @@ def create_mosaic_RGB(out_img1, out_img2, out_img3, maximum):
     return out_img
 
 
-def write_gif_normal(filename, size=1, fps=18):
+def write_gif_normal(filename, size=1, fps=18, time=None):
     """Procedure for writing grayscale image.
 
     Parameters
@@ -180,10 +233,10 @@ def write_gif_normal(filename, size=1, fps=18):
 
     """
     # Load NIfTI and put it in right shape
-    out_img, maximum = load_and_prepare_image(filename, size)
+    out_img, maximum = load_and_prepare_image(filename, size, time)
 
     # Create output mosaic
-    new_img = create_mosaic_normal(out_img, maximum)
+    new_img = create_mosaic_normal(out_img, maximum, time)
 
     # Figure out extension
     ext = '.{}'.format(parse_filename(filename)[2])
