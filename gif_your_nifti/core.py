@@ -4,6 +4,7 @@ import os
 import nibabel as nb
 import numpy as np
 from matplotlib.cm import get_cmap
+from nibabel.processing import resample_to_output
 from imageio import mimwrite
 from skimage.transform import resize
 
@@ -33,7 +34,7 @@ def parse_filename(filepath):
     return dirname, basename, ext
 
 
-def load_and_prepare_image(filename, size=1):
+def load_and_prepare_image(filename, size=1, iso=False):
     """Load and prepare image data.
 
     Parameters
@@ -42,6 +43,8 @@ def load_and_prepare_image(filename, size=1):
         Input file (eg. /john/home/image.nii.gz)
     size: float
         Image resizing factor.
+    iso: bool
+        Resample image to appear isotropic based on pixel dimension size.
 
     Returns
     -------
@@ -49,7 +52,18 @@ def load_and_prepare_image(filename, size=1):
 
     """
     # Load NIfTI file
-    data = nb.load(filename).get_data()
+    image = nb.load(filename)
+    if iso:
+        pixdims = list(image.header['pixdim'][1:4])
+        if pixdims == [1, 1, 1]:
+            print('Pixel dims are identical, skipping isotropic resampling.')
+        else:
+            image.set_sform(np.diag(pixdims + [1]))
+            image = resample_to_output(image, mode='constant', order=0)
+    data = image.get_data()
+    if data.min() < 0:
+        data -= data.min() # shift to positive integers after resampling
+
 
     # Pad data array with zeros to make the shape isometric
     maximum = np.max(data.shape)
@@ -166,7 +180,7 @@ def create_mosaic_RGB(out_img1, out_img2, out_img3, maximum):
     return out_img
 
 
-def write_gif_normal(filename, size=1, fps=18):
+def write_gif_normal(filename, size=1, fps=18, iso=False):
     """Procedure for writing grayscale image.
 
     Parameters
@@ -180,7 +194,7 @@ def write_gif_normal(filename, size=1, fps=18):
 
     """
     # Load NIfTI and put it in right shape
-    out_img, maximum = load_and_prepare_image(filename, size)
+    out_img, maximum = load_and_prepare_image(filename, size, iso)
 
     # Create output mosaic
     new_img = create_mosaic_normal(out_img, maximum)

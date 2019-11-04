@@ -36,12 +36,17 @@ def main():
         metavar=cfg.cmap, default=cfg.cmap,
         help="Color map. Used only in combination with 'pseudocolor' mode."
         )
+    parser.add_argument(
+        '--iso', action='store_true', required=False,
+        default=cfg.iso, help="Resample image to appear isotropic."
+        )
 
     args = parser.parse_args()
     cfg.mode = (args.mode).lower()
     cfg.size = args.size
     cfg.fps = args.fps
     cfg.cmap = args.cmap
+    cfg.iso = args.iso
 
     # Welcome message
     welcome_str = '{} {}'.format('gif_your_nifti', __version__)
@@ -52,12 +57,13 @@ def main():
     print('  mode = {}'.format(cfg.mode))
     print('  size = {}'.format(cfg.size))
     print('  fps  = {}'.format(cfg.fps))
+    print('  iso  = {}'.format(cfg.iso))
 
     # Determine gif creation mode
     if cfg.mode in ['normal', 'pseudocolor', 'depth']:
         for f in args.filename:
             if cfg.mode == 'normal':
-                core.write_gif_normal(f, cfg.size, cfg.fps)
+                core.write_gif_normal(f, cfg.size, cfg.fps, cfg.iso)
             elif cfg.mode == 'pseudocolor':
                 print('  cmap = {}'.format(cfg.cmap))
                 core.write_gif_pseudocolor(f, cfg.size, cfg.fps, cfg.cmap)
