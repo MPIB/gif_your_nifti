@@ -39,7 +39,7 @@ def main():
     parser.add_argument(
         '--time', type=str, required=False,
         metavar='method', default=cfg.time,
-        help="Gif along time axis using <coronal>, <saggital>, or the <horizontal> plane."
+        help="Gif along time axis using 'coronal', 'sagittal', or the 'horizontal' plane."
         )
 
     args = parser.parse_args()

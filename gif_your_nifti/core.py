@@ -93,9 +93,7 @@ def create_mosaic_normal(out_img, maximum, time):
     ----------
     out_img: numpy array
     maximum: int
-    time: string
-        Slice plane to use for 4D (time) mode (coronal, saggital, horizontal)
-        Default: None
+    time: str
 
     Returns
     -------
