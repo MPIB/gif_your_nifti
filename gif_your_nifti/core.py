@@ -126,7 +126,7 @@ def create_mosaic_normal(out_img, maximum, time):
             new_img = np.array([
                 np.vstack([
                     np.hstack([
-                        np.flip(out_img[x - 1 - d, :, :, col + row * rows], 1).T
+                        np.flip(out_img[x - 1 - d, :, :, col + row * cols], 1).T
                         for col in range(cols)
                     ]) for row in range(rows)
                 ]) for d in range(x)
@@ -135,7 +135,7 @@ def create_mosaic_normal(out_img, maximum, time):
             new_img = np.array([
                 np.vstack([
                     np.hstack([
-                        np.flip(out_img[:, y - 1 - d, :, col + row * rows], 1).T
+                        np.flip(out_img[:, y - 1 - d, :, col + row * cols], 1).T
                         for col in range(cols)
                     ]) for row in range(rows)
                 ]) for d in range(y)
@@ -144,7 +144,7 @@ def create_mosaic_normal(out_img, maximum, time):
             new_img = np.array([
                 np.vstack([
                     np.hstack([
-                        np.flip(out_img[:, :, d, col + row * rows], 1).T
+                        np.flip(out_img[:, :, d, col + row * cols], 1).T
                         for col in range(cols)
                     ]) for row in range(rows)
                 ]) for d in range(z)
