@@ -5,3 +5,4 @@ size = 1
 fps = 20
 cmap = 'hot'
 time = None
+cols = 10

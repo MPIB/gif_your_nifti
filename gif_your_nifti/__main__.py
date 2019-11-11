@@ -41,6 +41,11 @@ def main():
         metavar='method', default=cfg.time,
         help="Gif along time axis using 'coronal', 'sagittal', or the 'horizontal' plane."
         )
+    parser.add_argument(
+        '--cols', type=int, required=False,
+        metavar='columns', default=cfg.cols,
+        help="Number of columns to use in 4D grid mode."
+        )
 
     args = parser.parse_args()
     cfg.mode = (args.mode).lower()
@@ -48,6 +53,9 @@ def main():
     cfg.fps = args.fps
     cfg.cmap = args.cmap
     cfg.time = args.time
+    cfg.cols = args.cols
+    if 'cols' in vars(args) and 'time' not in vars(args):
+        parser.error('Option --cols requires an option for --time')
 
     # Welcome message
     welcome_str = '{} {}'.format('gif_your_nifti', __version__)
@@ -59,12 +67,13 @@ def main():
     print('  size = {}'.format(cfg.size))
     print('  fps  = {}'.format(cfg.fps))
     print('  time = {}'.format(cfg.time))
+    print('  cols = {}'.format(cfg.cols))
 
     # Determine gif creation mode
     if cfg.mode in ['normal', 'pseudocolor', 'depth']:
         for f in args.filename:
             if cfg.mode == 'normal':
-                core.write_gif_normal(f, cfg.size, cfg.fps, cfg.time)
+                core.write_gif_normal(f, cfg.size, cfg.fps, cfg.time, cfg.cols)
             elif cfg.mode == 'pseudocolor':
                 print('  cmap = {}'.format(cfg.cmap))
                 core.write_gif_pseudocolor(f, cfg.size, cfg.fps, cfg.cmap)

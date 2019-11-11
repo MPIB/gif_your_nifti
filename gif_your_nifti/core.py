@@ -86,7 +86,7 @@ def load_and_prepare_image(filename, size=1, time=None):
     return out_img, maximum
 
 
-def create_mosaic_normal(out_img, maximum, time):
+def create_mosaic_normal(out_img, maximum, time, cols):
     """Create grayscale image.
 
     Parameters
@@ -104,7 +104,6 @@ def create_mosaic_normal(out_img, maximum, time):
     if time is not None:
         # calculate grid size
         x, y, z, t = out_img.shape
-        cols = 10
         rows = int(np.ceil(t/cols)) 
         # pad missing volumes with zeros
         out_img = np.append(out_img, np.zeros((x, y, z, rows * cols - t)), axis=3)
@@ -217,7 +216,7 @@ def create_mosaic_RGB(out_img1, out_img2, out_img3, maximum):
     return out_img
 
 
-def write_gif_normal(filename, size=1, fps=18, time=None):
+def write_gif_normal(filename, size=1, fps=18, time=None, cols=10):
     """Procedure for writing grayscale image.
 
     Parameters
@@ -234,7 +233,7 @@ def write_gif_normal(filename, size=1, fps=18, time=None):
     out_img, maximum = load_and_prepare_image(filename, size, time)
 
     # Create output mosaic
-    new_img = create_mosaic_normal(out_img, maximum, time)
+    new_img = create_mosaic_normal(out_img, maximum, time, cols)
 
     # Figure out extension
     ext = '.{}'.format(parse_filename(filename)[2])
