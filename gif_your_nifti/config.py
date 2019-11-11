@@ -6,3 +6,4 @@ fps = 20
 cmap = 'hot'
 iso = False
 time = None
+cols = 10
