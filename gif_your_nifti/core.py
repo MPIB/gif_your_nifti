@@ -5,6 +5,7 @@ import nibabel as nb
 import numpy as np
 from matplotlib.cm import get_cmap
 from imageio import mimwrite
+from PIL import Image, ImageDraw, ImageFont
 from skimage.transform import resize
 
 
@@ -135,6 +136,20 @@ def create_mosaic_normal(out_img, maximum, time, cols):
                     ]) for row in range(rows)
                 ]) for d in range(z)
             ])
+        # draw volume index into grid
+        fontsizes = np.array([8, 12, 16, 24, 48])
+        # find font size closest to 10% of slice width
+        fontsize = fontsizes[np.argmin(np.abs(fontsizes - x/10))]
+        font = ImageFont.truetype('Vera.ttf', fontsize)
+        for depth in range(z):
+            mosaic = Image.fromarray(np.uint8(new_img[depth, :, :] * 255))
+            draw = ImageDraw.Draw(mosaic)
+            i = 0
+            for row in range(rows):
+                for col in range(cols):
+                    draw.text((col*x, row*y), str(i), font=font, fill=255)
+                    i = i + 1
+            new_img[depth, :, :] = np.array(mosaic)/np.max(mosaic)
     # 3x1 gif for each plane
     else:
         new_img = np.array(
